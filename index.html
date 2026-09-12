@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSIS Attendance System</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+darkMode: 'class',
+theme: {
+extend: {
+colors: {
+brand: {
+50: '#f0f7ff',
+100: '#e0effe',
+500: '#3b82f6',
+600: '#2563eb',
+700: '#1d4ed8',
+800: '#1e40af',
+900: '#1e3a8a',
+950: '#172554'
+}
+}
+}
+}
+}
+</script>
+<!-- FontAwesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Google Fonts Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- QRCode.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+body {
+font-family: 'Inter', sans-serif;
+}
+/* Custom scrollbar */
+::-webkit-scrollbar {
+width: 6px;
+height: 6px;
+}
+::-webkit-scrollbar-track {
+background: rgba(0,0,0,0.05);
+}
+::-webkit-scrollbar-thumb {
+background: rgba(100,100,100,0.2);
+border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-track {
+background: rgba(255,255,255,0.05);
+}
+.dark ::-webkit-scrollbar-thumb {
+background: rgba(255,255,255,0.2);
+}
+@media print {
+.no-print {
+display: none !important;
+}
+.print-only {
+display: block !important;
+}
+body {
+background: white !important;
+color: black !important;
+}
+.main-content-area {
+margin-left: 0 !important;
+padding: 0 !important;
+}
+}
+</style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-full flex flex-col transition-colors duration-200">
+<!-- TOAST NOTIFICATION CONTAINER -->
+<div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+<!-- PAGE 1: LOGIN SECTION -->
+<div id="page-login" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-brand-900 via-brand-800 to-gray-900">
+<div class="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700">
+<div class="text-center mb-8">
+<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-100 dark:bg-brand-900 text-brand-600 dark:text-brand-400 mb-4 shadow-inner">
+<i class="fa-solid fa-graduation-cap text-3xl"></i>
+</div>
+<h1 id="login-app-title" class="text-2xl font-bold text-gray-900 dark:text-white">OSIS Attendance System</h1>
+<p id="login-school-name" class="text-sm text-gray-500 dark:text-gray-400 mt-1">SMA Negeri 1 Indonesia</p>
+</div>
+<!-- Login Error Alert -->
+<div id="login-error" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm rounded-lg border border-red-200 dark:border-red-800 flex items-center gap-2">
+<i class="fa-solid fa-triangle-exclamation"></i>
+<span id="login-error-text">Username atau password salah!</span>
+</div>
+<form id="form-login" onsubmit="handleLogin(event)" class="space-y-5">
+<div>
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username / Email</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fa-solid fa-user"></i></span>
+<input type="text" id="login-username" required class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-brand-500 dark:text-white outline-none" placeholder="Masukkan username">
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fa-solid fa-lock"></i></span>
+<input type="password" id="login-password" required class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-brand-500 dark:text-white outline-none" placeholder="Masukkan password">
+</div>
+</div>
+<div class="flex items-center justify-between text-sm">
+<label class="flex items-center text-gray-600 dark:text-gray-400 cursor-pointer">
+<input type="checkbox" id="login-remember" class="rounded text-brand-600 focus:ring-brand-500 dark:bg-gray-700 border-gray-300">
+<span class="ml-2">Ingat saya</span>
+</label>
+</div>
+<button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg shadow-md transition duration-150 flex items-center justify-center gap-2">
+<i class="fa-solid fa-right-to-bracket"></i> Masuk Sistem
+</button>
+</form>
+<div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+<p class="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-2">Akun Demo Standar:</p>
+<div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+<div>
+<span class="font-bold text-brand-600 dark:text-brand-400">Admin:</span>
+
+User: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">admin</code>
+
+Pass: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">admin123</code>
+</div>
+<div>
+<span class="font-bold text-brand-600 dark:text-brand-400">Pengurus:</span>
+
+User: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">osis</code>
+
+Pass: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">osis123</code>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- MAIN APP WRAPPER (HIDDEN UNTIL LOGIN) -->
+<div id="app-wrapper" class="hidden min-h-screen flex flex-col md:flex-row">
+<!-- SIDEBAR -->
+<aside id="sidebar" class="no-print bg-white dark:bg-gray-800 w-full md:w-64 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 fixed md:static inset-y-0 left-0 z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col justify-between">
+<div>
+<!-- Sidebar Header -->
+<div class="p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-lg shadow">
+<i class="fa-solid fa-users"></i>
+</div>
+<div>
+<h2 class="font-bold text-gray-900 dark:text-white leading-tight text-sm">OSIS Absensi</h2>
+<p id="sidebar-school" class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[120px]">SMAN 1</p>
+</div>
+</div>
+<button onclick="toggleMobileSidebar()" class="md:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400">
+<i class="fa-solid fa-xmark text-xl"></i>
+</button>
+</div>
+<!-- Navigation Menu -->
+<nav class="p-4 space-y-1 text-sm font-medium">
+<a href="#" onclick="navigate('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-gray-700 hover:text-brand-600 transition">
+<i class="fa-solid fa-chart-pie w-5 text-center text-brand-600 dark:text-brand-400"></i> Dashboard
+</a>
+<a href="#" onclick="navigate('absensi')" id="nav-absensi" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-gray-700 hover:text-brand-600 transition">
+<i class="fa-solid fa-user-check w-5 text-center text-emerald-500"></i> Absensi Digital
+</a>
+<a href="#" onclick="navigate('pengurus')" id="nav-pengurus" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-gray-700 hover:text-brand-600 transition">
+<i class="fa-solid fa-id-card w-5 text-center text-indigo-500"></i> Data Pengurus
+</a>
+<a href="#" onclick="navigate('kegiatan')" id="nav-kegiatan" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-gray-700 hover:text-brand-600 transition">
+<i class="fa-solid fa-calendar-check w-5 text-center text-amber-500"></i> Kegiatan OSIS
+</a>
+<a href="#" onclick="navigate('jadwal')" id="nav-jadwal" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-gray-700 hover:text-brand-600 transition">
+<i class="fa-solid fa-calendar-days w-5 text-center text-cyan-500"></i> Jadwal Kegiatan
+</a>
+<a href="#" onclick="navigate('izin')" id="nav-izin" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-gray-700 hover:text-brand-600 transition">
+<i class="fa-solid fa-envelope-open-text w-5 text-center text-purple-500"></i> Pengajuan Izin
+</a>
+<a href="#" onclick="navigate('riwayat')" id="nav-riwayat" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-gray-700 hover:text-brand-600 transition">
+<i class="fa-solid fa-clock-rotate-left w-5 text-center text-rose-500"></i> Riwayat Absensi
+</a>
+<a href="#" onclick="navigate('qrcode')" id="nav-qrcode" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-gray-700 hover:text-brand-600 transition">
+<i class="fa-solid fa-qrcode w-5 text-center text-teal-500"></i> QR Absensi
+</a>
+<a href="#" onclick="navigate('laporan')" id="nav-laporan" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-gray-700 hover:text-brand-600 transition">
+<i class="fa-solid fa-file-invoice w-5 text-center text-blue-500"></i> Laporan
+</a>
+<a href="#" onclick="navigate('pengaturan')" id="nav-pengaturan" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-gray-700 hover:text-brand-600 transition">
+<i class="fa-solid fa-sliders w-5 text-center text-gray-500"></i> Pengaturan
+</a>
+</nav>
+</div>
+<!-- Sidebar Footer & Darkmode Toggle -->
+<div class="p-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+<button onclick="toggleDarkMode()" class="w-full flex items-center justify-between px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg text-xs font-medium">
+<span class="flex items-center gap-2">
+<i id="theme-icon" class="fa-solid fa-sun"></i> Mode Tampilan
+</span>
+<span id="theme-text" class="text-gray-500 dark:text-gray-400">Light</span>
+</button>
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center text-xs font-bold" id="user-avatar-initial">A</div>
+<div class="overflow-hidden">
+<p class="text-xs font-semibold text-gray-900 dark:text-white truncate" id="user-display-name">Admin OSIS</p>
+<p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider" id="user-display-role">ADMIN</p>
+</div>
+</div>
+<button onclick="handleLogout()" title="Keluar" class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30">
+<i class="fa-solid fa-right-from-bracket"></i>
+</button>
+</div>
+</div>
+</aside>
+<!-- BACKDROP FOR MOBILE SIDEBAR -->
+<div id="mobile-backdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+<!-- MAIN CONTENT AREA -->
+<main class="flex-1 flex flex-col min-w-0 min-h-screen main-content-area">
+<!-- TOP NAVBAR -->
+<header class="no-print bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+<div class="flex items-center gap-3">
+<button onclick="toggleMobileSidebar()" class="md:hidden text-gray-600 dark:text-gray-300 hover:text-brand-600 p-1">
+<i class="fa-solid fa-bars text-xl"></i>
+</button>
+<h2 id="top-bar-title" class="text-lg font-bold text-gray-800 dark:text-white">Dashboard</h2>
+</div>
+<!-- Realtime Digital Clock Widget -->
+<div class="flex items-center gap-4">
+<div class="text-right hidden sm:block">
+<div id="realtime-date" class="text-xs text-gray-500 dark:text-gray-400 font-medium">Senin, 12 Januari 2026</div>
+<div id="realtime-clock" class="text-sm font-bold text-brand-600 dark:text-brand-400 font-mono">00:00:00</div>
+</div>
+<div class="sm:hidden text-xs font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/40 px-2 py-1 rounded" id="realtime-clock-mobile">
+00:00:00
+</div>
+</div>
+</header>
+<!-- DYNAMIC VIEW PAGES CONTAINER -->
+<div class="p-4 sm:p-6 flex-1 space-y-6">
+<!-- VIEW 1: DASHBOARD -->
+<section id="view-dashboard" class="space-y-6">
+<!-- Banner Info -->
+<div class="bg-gradient-to-r from-brand-800 to-brand-600 text-white rounded-2xl p-6 shadow-lg relative overflow-hidden">
+<div class="relative z-10">
+<h3 class="text-xl font-bold mb-1">Selamat Datang di OSIS Attendance System 👋</h3>
+<p class="text-brand-100 text-sm max-w-2xl">Kelola absensi, pengurus, kegiatan, dan laporan keorganisasian OSIS secara transparan, akurat, dan terintegrasi.</p>
+</div>
+<i class="fa-solid fa-users-gear absolute -right-6 -bottom-6 text-9xl opacity-10 text-white"></i>
+</div>
+<!-- Statistics Cards Grid -->
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+<div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
+<div class="flex items-center justify-between text-gray-500 dark:text-gray-400 text-xs font-semibold">
+<span>TOTAL PENGURUS</span>
+<i class="fa-solid fa-users text-brand-500"></i>
+</div>
+<div class="mt-3 text-2xl font-extrabold text-gray-900 dark:text-white" id="stat-total-pengurus">0</div>
+<div class="text-[10px] text-gray-400 mt-1">Pengurus Aktif</div>
+</div>
+<div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
+<div class="flex items-center justify-between text-gray-500 dark:text-gray-400 text-xs font-semibold">
+<span>HADIR HARI INI</span>
+<i class="fa-solid fa-user-check text-emerald-500"></i>
+</div>
+<div class="mt-3 text-2xl font-extrabold text-emerald-600 dark:text-emerald-400" id="stat-hadir">0</div>
+<div class="text-[10px] text-emerald-500 mt-1"><i class="fa-solid fa-circle text-[8px]"></i> Tepat waktu</div>
+</div>
+<div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
+<div class="flex items-center justify-between text-gray-500 dark:text-gray-400 text-xs font-semibold">
+<span>TERLAMBAT</span>
+<i class="fa-solid fa-clock text-amber-500"></i>
+</div>
+<div class="mt-3 text-2xl font-extrabold text-amber-600 dark:text-amber-400" id="stat-terlambat">0</div>
+<div class="text-[10px] text-amber-500 mt-1">Lewat batas waktu</div>
+</div>
+<div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
+<div class="flex items-center justify-between text-gray-500 dark:text-gray-400 text-xs font-semibold">
+<span>IZIN / SAKIT</span>
+<i class="fa-solid fa-envelope-open-text text-purple-500"></i>
+</div>
+<div class="mt-3 text-2xl font-extrabold text-purple-600 dark:text-purple-400" id="stat-izin">0</div>
+<div class="text-[10px] text-purple-500 mt-1">Telah disetujui</div>
+</div>
+<div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
+<div class="flex items-center justify-between text-gray-500 dark:text-gray-400 text-xs font-semibold">
+<span>TIDAK HADIR</span>
+<i class="fa-solid fa-user-xmark text-rose-500"></i>
+</div>
+<div class="mt-3 text-2xl font-extrabold text-rose-600 dark:text-rose-400" id="stat-alpa">0</div>
+<div class="text-[10px] text-rose-500 mt-1">Tanpa keterangan</div>
+</div>
+<div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
+<div class="flex items-center justify-between text-gray-500 dark:text-gray-400 text-xs font-semibold">
+<span>TOTAL KEGIATAN</span>
+<i class="fa-solid fa-calendar-check text-cyan-500"></i>
+</div>
+<div class="mt-3 text-2xl font-extrabold text-cyan-600 dark:text-cyan-400" id="stat-total-kegiatan">0</div>
+<div class="text-[10px] text-gray-400 mt-1">Terjadwal</div>
+</div>
+</div>
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+<div class="flex items-center justify-between mb-4">
+<h4 class="font-bold text-gray-800 dark:text-white text-sm">Grafik Kehadiran Mingguan</h4>
+<span class="text-xs text-gray-400">7 Hari Terakhir</span>
+</div>
+<div class="h-64 relative">
+<canvas id="chartWeekly"></canvas>
+</div>
+</div>
+<div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
+<div>
+<h4 class="font-bold text-gray-800 dark:text-white text-sm mb-4">Persentase Kehadiran Hari Ini</h4>
+<div class="h-48 relative flex items-center justify-center">
+<canvas id="chartPie"></canvas>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 text-center text-xs text-gray-500">
+Tingkat Kehadiran Overall: <span id="dash-attendance-percentage" class="font-bold text-brand-600 dark:text-brand-400">0%</span>
+</div>
+</div>
+</div>
+<!-- Recent Activity Table -->
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+<div class="flex items-center justify-between mb-4">
+<h4 class="font-bold text-gray-800 dark:text-white text-sm">Aktivitas Absensi Terbaru Hari Ini</h4>
+<button onclick="navigate('riwayat')" class="text-xs text-brand-600 hover:underline font-medium">Lihat Semua</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left">
+<thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400">
+<tr>
+<th class="py-3 px-4">Nama Pengurus</th>
+<th class="py-3 px-4">Kegiatan</th>
+<th class="py-3 px-4">Jam Masuk</th>
+<th class="py-3 px-4">Status</th>
+<th class="py-3 px-4">Keterangan</th>
+</tr>
+</thead>
+<tbody id="table-recent-activity" class="divide-y divide-gray-100 dark:divide-gray-700">
+<!-- Dynamic rows -->
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- VIEW 2: ABSENSI -->
+<section id="view-absensi" class="space-y-6 hidden">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Main Absensi Card -->
+<div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center text-center">
+<span class="inline-block px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 text-xs font-semibold mb-2">PRESENSI ONLINE MANDIRI</span>
+<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Form Absensi Digital Pengurus</h3>
+<p class="text-xs text-gray-500 mb-6">Silakan pilih kegiatan dan tekan tombol Absen Masuk/Pulang</p>
+<!-- Big Digital Clock -->
+<div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-2xl w-full max-w-md mb-6">
+<div id="absen-clock-date" class="text-sm font-medium text-gray-500 dark:text-gray-400">Senin, 12 Januari 2026</div>
+<div id="absen-clock-time" class="text-4xl font-extrabold text-brand-600 dark:text-brand-400 font-mono my-2">08:15:32</div>
+<div class="text-xs text-gray-400">Waktu Server Terverifikasi</div>
+</div>
+<!-- Activity Selection Form -->
+<div class="w-full max-w-md space-y-4 text-left mb-6">
+<div>
+<label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">PILIH KEGIATAN AKTIF</label>
+<select id="absen-select-kegiatan" class="w-full
